@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<project name="YUI Compressor" default="build.jar" basedir=".">
+<project name="YUI Compressor" default="jar" basedir=".">
 
     <target name="clean" depends="-load.properties">
         <delete dir="${build.dir}" quiet="true"/>
@@ -58,6 +58,19 @@
         </jar>
     </target>
 
+    <target name="jar" depends="build.jar">
+        <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask">
+<classpath>
+      <pathelement location="lib/jarjar-1.4.jar"/>
+</classpath>
+
+        </taskdef>
+        <jarjar jarfile="${build.dir}/${jar.standalone.name}">
+            <zipfileset src="${build.dir}/${jar.name}"/>
+            <rule pattern="org.**" result="com.yahoo.platform.yui.@0"/>
+            <zap pattern="jargs.**"/>
+        </jarjar>
+    </target>
     <target name="build.dist.package" depends="build.jar">
         <mkdir dir="${build.dir}/${dist.package.name}"/>
         <mkdir dir="${build.dir}/${dist.package.name}/build"/>
