@@ -226,7 +226,7 @@ public class CssCompressor {
         // But, be careful not to turn "p :link {...}" into "p:link{...}"
         // Swap out any pseudo-class colons with the token, and then swap back.
         sb = new StringBuffer();
-        p = Pattern.compile("(^|\\})(([^\\{:])+:)+([^\\{]*\\{)");
+        p = Pattern.compile("(^|\\})((^|([^\\{:])+):)+([^\\{]*\\{)");
         m = p.matcher(css);
         while (m.find()) {
             String s = m.group();
@@ -351,7 +351,7 @@ public class CssCompressor {
         // Replace 0 0 0 0; with 0.
         css = css.replaceAll(":0 0 0 0(;|})", ":0$1");
         css = css.replaceAll(":0 0 0(;|})", ":0$1");
-        css = css.replaceAll(":0 0(;|})", ":0$1");
+        css = css.replaceAll("(?<!flex):0 0(;|})", ":0$1");
 
 
         // Replace background-position:0; with background-position:0 0;
@@ -501,6 +501,25 @@ public class CssCompressor {
         for(i = 0, max = preservedTokens.size(); i < max; i++) {
             css = css.replace("___YUICSSMIN_PRESERVED_TOKEN_" + i + "___", preservedTokens.get(i).toString());
         }
+        
+        // Add spaces back in between operators for css calc function
+        // https://developer.mozilla.org/en-US/docs/Web/CSS/calc
+        // Added by Eric Arnol-Martin (earnolmartin@gmail.com)
+        sb = new StringBuffer();
+        p = Pattern.compile("calc\\([^\\)]*\\)");
+        m = p.matcher(css);
+        while (m.find()) {
+            String s = m.group();
+            
+            s = s.replaceAll("(?<=[%|px|em|rem|vw|\\d]+)\\+", " + ");
+            s = s.replaceAll("(?<=[%|px|em|rem|vw|\\d]+)\\-", " - ");
+            s = s.replaceAll("(?<=[%|px|em|rem|vw|\\d]+)\\*", " * ");
+            s = s.replaceAll("(?<=[%|px|em|rem|vw|\\d]+)\\/", " / ");
+            
+            m.appendReplacement(sb, s);
+        }
+        m.appendTail(sb);
+        css = sb.toString(); 
 
         // Trim the final string (for any leading or trailing white spaces)
         css = css.trim();
